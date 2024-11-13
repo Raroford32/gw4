@@ -14,6 +14,8 @@ async function sendMessage() {
     const message = messageInput.value.trim();
     const modelSelector = document.getElementById('modelSelector');
     const selectedModel = modelSelector.value;
+    const templateSelector = document.getElementById('templateSelector');
+    const selectedTemplate = templateSelector.value;
     
     if (!message) {
         showError('Please enter a message');
@@ -29,7 +31,7 @@ async function sendMessage() {
     messageInput.value = '';
     
     try {
-        console.log('Generating code with:', { message, model: selectedModel });
+        console.log('Generating code with:', { message, model: selectedModel, template_id: selectedTemplate });
         
         const response = await fetch('/api/generate', {
             method: 'POST',
@@ -38,7 +40,8 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 message: message,
-                model: selectedModel
+                model: selectedModel,
+                template_id: selectedTemplate || null
             })
         });
         
@@ -97,6 +100,19 @@ function displayFile(file) {
     setEditorMode(file.path);
     setEditorContent(file.content);
 }
+
+// Template description handling
+document.getElementById('templateSelector').addEventListener('change', function() {
+    const description = this.options[this.selectedIndex].dataset.description;
+    const descriptionElement = document.getElementById('templateDescription');
+    
+    if (description) {
+        descriptionElement.textContent = description;
+        descriptionElement.classList.remove('d-none');
+    } else {
+        descriptionElement.classList.add('d-none');
+    }
+});
 
 function showProgress() {
     document.getElementById('generationProgress').classList.remove('d-none');

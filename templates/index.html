@@ -4,15 +4,31 @@
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="card-title mb-0">Chat Interface</h5>
-                <select class="form-select w-auto" id="modelSelector">
-                    <option value="claude-2">Claude 2</option>
-                    <option value="qwen-coder">Qwen 2.5 Coder</option>
-                    <option value="gpt-3.5">GPT-3.5</option>
-                </select>
             </div>
             <div class="card-body d-flex flex-column" style="height: 600px;">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <select class="form-select" id="modelSelector">
+                            <option value="claude-2">Claude 2</option>
+                            <option value="qwen-coder">Qwen 2.5 Coder</option>
+                            <option value="gpt-3.5">GPT-3.5</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-select" id="templateSelector">
+                            <option value="">Select Template (Optional)</option>
+                            {% for template in templates %}
+                                <option value="{{ template.id }}" 
+                                        data-description="{{ template.description }}">
+                                    {{ template.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="templateDescription" class="alert alert-info mb-3 d-none"></div>
                 <div id="chatHistory" class="flex-grow-1 overflow-auto mb-3">
                     <!-- Chat messages will be inserted here -->
                 </div>

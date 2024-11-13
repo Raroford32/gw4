@@ -7,18 +7,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 AVAILABLE_MODELS = {
-    'claude-2': 'anthropic/claude-2',
+    'claude-2': 'x-ai/grok-beta',
     'qwen-coder': 'qwen/qwen-2.5-coder-32b-instruct',
-    'gpt-3.5': 'openai/gpt-3.5-turbo'
+    'gpt-3.5': 'openai/chatgpt-4o-latest'
 }
 
-def generate_code(message, model='claude-2'):
+
+def generate_code(message, model='qwen-2.5-coder-32b-instruct'):
     try:
         headers = {
             "Authorization": f"Bearer {app.config['OPENROUTER_API_KEY']}",
             "Content-Type": "application/json"
         }
-        
+
         prompt = f"""
         You are a code generation assistant. Based on the following message, generate a complete code implementation.
         Format the response with clear file paths and content using this structure:
@@ -34,29 +35,32 @@ def generate_code(message, model='claude-2'):
         Please ensure each file is properly marked with the file path and formatted code blocks.
         If the implementation requires multiple files, provide them all in the specified format.
         """
-        
+
         logger.info(f"Sending request to OpenRouter API using model: {model}")
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             json={
-                "model": AVAILABLE_MODELS.get(model, AVAILABLE_MODELS['claude-2']),
-                "messages": [{"role": "user", "content": prompt}],
+                "model": AVAILABLE_MODELS.get(model,
+                                              AVAILABLE_MODELS['claude-2']),
+                "messages": [{
+                    "role": "user",
+                    "content": prompt
+                }],
                 "max_tokens": 4000
-            }
-        )
-        
+            })
+
         if response.status_code != 200:
             error_msg = f"API Error: {response.text}"
             logger.error(error_msg)
             return {'error': error_msg}
-            
+
         result = response.json()
         logger.info("Received response from OpenRouter API")
-        
+
         generated_text = result['choices'][0]['message']['content']
         logger.debug(f"Generated text length: {len(generated_text)}")
-        
+
         # Ensure the response has at least one file structure
         if "## file_path:" not in generated_text:
             generated_text = """## file_path: main.py
@@ -64,11 +68,9 @@ def generate_code(message, model='claude-2'):
 # Generated code
 {generated_text}
 ```"""
-        
-        return {
-            'code': generated_text
-        }
-        
+
+        return {'code': generated_text}
+
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Error in generate_code: {error_msg}")

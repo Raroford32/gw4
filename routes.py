@@ -7,6 +7,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def init_templates():
+    if Template.query.count() == 0:
+        default_templates = [
+            {
+                'name': 'Flask Web App',
+                'description': 'Basic Flask web application with routing, templates, and database integration',
+                'base_prompt': 'Create a Flask web application with:\n- Basic routing\n- HTML templates\n- Database integration\n- Form handling'
+            },
+            {
+                'name': 'React Frontend',
+                'description': 'Modern React frontend with components and state management',
+                'base_prompt': 'Create a React frontend with:\n- Component structure\n- State management\n- Responsive design\n- API integration'
+            },
+            {
+                'name': 'API Backend',
+                'description': 'RESTful API backend with proper structure and error handling',
+                'base_prompt': 'Create a RESTful API backend with:\n- Proper route structure\n- Input validation\n- Error handling\n- Database integration'
+            }
+        ]
+        
+        for template_data in default_templates:
+            template = Template(**template_data)
+            db.session.add(template)
+        db.session.commit()
+        logger.info("Default templates initialized")
+
 @app.route('/')
 def index():
     try:
@@ -19,7 +45,6 @@ def index():
         logger.error(f"Error retrieving templates: {str(e)}")
         return render_template('index.html', templates=[])
 
-
 @app.route('/api/templates', methods=['GET'])
 def list_templates():
     templates = Template.query.filter_by(is_active=True).all()
@@ -28,28 +53,6 @@ def list_templates():
         'name': t.name,
         'description': t.description
     } for t in templates])
-
-
-@app.route('/api/templates', methods=['POST'])
-def create_template():
-    data = request.json
-    if not data.get('name') or not data.get('base_prompt'):
-        return jsonify({'error': 'Name and base prompt are required'}), 400
-
-    template = Template(
-        name=data['name'],
-        description=data.get('description', ''),
-        base_prompt=data['base_prompt']
-    )
-    db.session.add(template)
-    db.session.commit()
-
-    return jsonify({
-        'id': template.id,
-        'name': template.name,
-        'description': template.description
-    })
-
 
 @app.route('/api/generate', methods=['POST'])
 def generate():
@@ -112,7 +115,6 @@ def generate():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/context/<int:context_id>')
 def get_context(context_id):
     context = Context.query.get_or_404(context_id)
@@ -133,3 +135,7 @@ def get_context(context_id):
             'content': file.content
         } for file in files]
     })
+
+# Initialize templates when the application starts
+with app.app_context():
+    init_templates()

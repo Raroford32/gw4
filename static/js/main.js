@@ -1,20 +1,35 @@
 let currentFiles = [];
+let chatHistory = [];
 
-async function generateCode() {
-    const projectTitle = document.getElementById('projectTitle').value;
-    const requirements = document.getElementById('requirements').value;
-    const specifications = document.getElementById('specifications').value;
+function addMessage(message, type = 'user') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}-message mb-3 p-3 rounded`;
+    messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+    document.getElementById('chatHistory').appendChild(messageDiv);
+    document.getElementById('chatHistory').scrollTop = document.getElementById('chatHistory').scrollHeight;
+}
+
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    const modelSelector = document.getElementById('modelSelector');
+    const selectedModel = modelSelector.value;
     
-    if (!requirements) {
-        showError('Requirements are required');
+    if (!message) {
+        showError('Please enter a message');
         return;
     }
     
     showProgress();
     hideError();
     
+    // Add user message to chat
+    addMessage(message, 'user');
+    chatHistory.push({ role: 'user', content: message });
+    messageInput.value = '';
+    
     try {
-        console.log('Generating code with:', { projectTitle, requirements, specifications });
+        console.log('Generating code with:', { message, model: selectedModel });
         
         const response = await fetch('/api/generate', {
             method: 'POST',
@@ -22,9 +37,8 @@ async function generateCode() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                title: projectTitle,
-                requirements: requirements,
-                specifications: specifications
+                message: message,
+                model: selectedModel
             })
         });
         
@@ -42,6 +56,12 @@ async function generateCode() {
             showError('No code files were generated');
             return;
         }
+        
+        // Add assistant response to chat
+        addMessage('Generated code files:', 'assistant');
+        data.files.forEach(file => {
+            addMessage(`📄 ${file.path}`, 'assistant');
+        });
         
         currentFiles = data.files;
         console.log('Updating file list with:', currentFiles);
@@ -96,3 +116,11 @@ function showError(message) {
 function hideError() {
     document.getElementById('generationError').classList.add('d-none');
 }
+
+// Add event listener for Enter key in message input
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});

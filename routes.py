@@ -12,23 +12,23 @@ def index():
 def generate():
     try:
         data = request.json
-        requirements = data.get('requirements')
-        specifications = data.get('specifications')
+        message = data.get('message')
+        model = data.get('model', 'claude-2')
         
-        if not requirements:
-            return jsonify({'error': 'Requirements are required'}), 400
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
             
         context = Context(
-            title=data.get('title', 'Untitled Project'),
-            requirements=requirements,
-            specifications=specifications,
+            title='Chat Generated Project',
+            requirements=message,
+            specifications='Generated via chat interface',
             status='processing'
         )
         db.session.add(context)
         db.session.commit()
         
         # Generate code using OpenRouter.ai
-        generated_response = generate_code(requirements, specifications)
+        generated_response = generate_code(message, model)
         
         if generated_response.get('error'):
             context.status = 'error'

@@ -19,3 +19,34 @@
 .generation-status {
     margin-bottom: 1rem;
 }
+
+#chatHistory {
+    padding: 1rem;
+    height: 400px;
+}
+
+.chat-message {
+    max-width: 80%;
+    margin-bottom: 1rem;
+}
+
+.user-message {
+    margin-left: auto;
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.assistant-message {
+    margin-right: auto;
+    background-color: var(--bs-secondary-bg);
+}
+
+#messageInput {
+    resize: none;
+    border-radius: 0.375rem;
+}
+
+#sendButton {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}

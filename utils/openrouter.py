@@ -6,7 +6,13 @@ from app import app
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def generate_code(requirements, specifications):
+AVAILABLE_MODELS = {
+    'claude-2': 'anthropic/claude-2',
+    'qwen-coder': 'qwen/qwen-2.5-coder-32b-instruct',
+    'gpt-3.5': 'openai/gpt-3.5-turbo'
+}
+
+def generate_code(message, model='claude-2'):
     try:
         headers = {
             "Authorization": f"Bearer {app.config['OPENROUTER_API_KEY']}",
@@ -14,7 +20,7 @@ def generate_code(requirements, specifications):
         }
         
         prompt = f"""
-        Based on the following requirements and specifications, generate a complete code implementation.
+        You are a code generation assistant. Based on the following message, generate a complete code implementation.
         Format the response with clear file paths and content using this structure:
         
         ## file_path: filename.ext
@@ -22,22 +28,19 @@ def generate_code(requirements, specifications):
         code content
         ```
         
-        Requirements:
-        {requirements}
-        
-        Specifications:
-        {specifications}
+        User Message:
+        {message}
         
         Please ensure each file is properly marked with the file path and formatted code blocks.
         If the implementation requires multiple files, provide them all in the specified format.
         """
         
-        logger.info("Sending request to OpenRouter API")
+        logger.info(f"Sending request to OpenRouter API using model: {model}")
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             json={
-                "model": "anthropic/claude-2",
+                "model": AVAILABLE_MODELS.get(model, AVAILABLE_MODELS['claude-2']),
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 4000
             }

@@ -20,6 +20,7 @@ app.config["OPENROUTER_API_KEY"] = os.environ.get("OPENROUTER_API_KEY")
 db.init_app(app)
 
 with app.app_context():
+    db.drop_all()  # Drop all tables before recreation
     import models
     import routes
     db.create_all()

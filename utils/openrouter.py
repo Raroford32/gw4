@@ -1,5 +1,10 @@
 import requests
+import logging
 from app import app
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def generate_code(requirements, specifications):
     try:
@@ -9,16 +14,25 @@ def generate_code(requirements, specifications):
         }
         
         prompt = f"""
+        Based on the following requirements and specifications, generate a complete code implementation.
+        Format the response with clear file paths and content using this structure:
+        
+        ## file_path: filename.ext
+        ```language
+        code content
+        ```
+        
         Requirements:
         {requirements}
         
         Specifications:
         {specifications}
         
-        Please generate the complete code implementation following these requirements and specifications.
-        Provide the code in a structured format with clear file paths and content.
+        Please ensure each file is properly marked with the file path and formatted code blocks.
+        If the implementation requires multiple files, provide them all in the specified format.
         """
         
+        logger.info("Sending request to OpenRouter API")
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
@@ -30,14 +44,29 @@ def generate_code(requirements, specifications):
         )
         
         if response.status_code != 200:
-            return {'error': f"API Error: {response.text}"}
+            error_msg = f"API Error: {response.text}"
+            logger.error(error_msg)
+            return {'error': error_msg}
             
         result = response.json()
+        logger.info("Received response from OpenRouter API")
+        
         generated_text = result['choices'][0]['message']['content']
+        logger.debug(f"Generated text length: {len(generated_text)}")
+        
+        # Ensure the response has at least one file structure
+        if "## file_path:" not in generated_text:
+            generated_text = """## file_path: main.py
+```python
+# Generated code
+{generated_text}
+```"""
         
         return {
             'code': generated_text
         }
         
     except Exception as e:
-        return {'error': str(e)}
+        error_msg = str(e)
+        logger.error(f"Error in generate_code: {error_msg}")
+        return {'error': error_msg}

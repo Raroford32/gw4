@@ -1,61 +1,32 @@
 from flask import render_template, request, jsonify
 from app import app, db
-from models import Context, GeneratedFile, Template
+from models import Context, GeneratedFile
 from utils.openrouter import generate_code
 from utils.code_generator import process_generation
+from utils.templates import get_all_templates, get_template_prompt
 import logging
 
 logger = logging.getLogger(__name__)
 
-def init_templates():
-    if Template.query.count() == 0:
-        default_templates = [
-            {
-                'name': 'Flask Web App',
-                'description': 'Basic Flask web application with routing, templates, and database integration',
-                'base_prompt': 'Create a Flask web application with:\n- Basic routing\n- HTML templates\n- Database integration\n- Form handling'
-            },
-            {
-                'name': 'React Frontend',
-                'description': 'Modern React frontend with components and state management',
-                'base_prompt': 'Create a React frontend with:\n- Component structure\n- State management\n- Responsive design\n- API integration'
-            },
-            {
-                'name': 'API Backend',
-                'description': 'RESTful API backend with proper structure and error handling',
-                'base_prompt': 'Create a RESTful API backend with:\n- Proper route structure\n- Input validation\n- Error handling\n- Database integration'
-            }
-        ]
-        
-        for template_data in default_templates:
-            template = Template(**template_data)
-            db.session.add(template)
-        db.session.commit()
-        logger.info("Default templates initialized")
-
 @app.route('/')
 def index():
-    try:
-        templates = Template.query.filter_by(is_active=True).all()
-        logger.info(f"Retrieved {len(templates)} templates from database")
-        for template in templates:
-            logger.info(f"Template: {template.name} (ID: {template.id})")
-        return render_template('index.html', templates=templates)
-    except Exception as e:
-        logger.error(f"Error retrieving templates: {str(e)}")
-        return render_template('index.html', templates=[])
+    """Render the main application interface with available templates."""
+    templates = get_all_templates()
+    return render_template('index.html', templates=templates)
 
 @app.route('/api/templates', methods=['GET'])
 def list_templates():
-    templates = Template.query.filter_by(is_active=True).all()
-    return jsonify([{
-        'id': t.id,
-        'name': t.name,
-        'description': t.description
-    } for t in templates])
+    """Get all available project templates."""
+    return jsonify(get_all_templates())
 
 @app.route('/api/generate', methods=['POST'])
 def generate():
+    """
+    Generate code based on user requirements using AI models.
+    
+    Returns:
+        JSON response containing generated code files or error message
+    """
     try:
         data = request.json
         message = data.get('message')
@@ -65,19 +36,15 @@ def generate():
         if not message:
             return jsonify({'error': 'Message is required'}), 400
 
-        # Get template if specified
-        template = None
+        # Process template if specified
         if template_id:
-            template = Template.query.get(template_id)
-            if template:
-                message = f"{template.base_prompt}\n\nUser Requirements:\n{message}"
+            message = get_template_prompt(template_id, message)
 
         context = Context(
             title='Chat Generated Project',
             requirements=message,
             specifications='Generated via chat interface',
-            status='processing',
-            template_id=template_id if template else None
+            status='processing'
         )
         db.session.add(context)
         db.session.commit()
@@ -113,10 +80,20 @@ def generate():
         })
 
     except Exception as e:
+        logger.error(f"Error in code generation: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/context/<int:context_id>')
 def get_context(context_id):
+    """
+    Retrieve the context and generated files for a specific generation request.
+    
+    Args:
+        context_id: ID of the context to retrieve
+        
+    Returns:
+        JSON response containing context and generated files
+    """
     context = Context.query.get_or_404(context_id)
     files = GeneratedFile.query.filter_by(context_id=context_id).all()
 
@@ -127,15 +104,10 @@ def get_context(context_id):
             'requirements': context.requirements,
             'specifications': context.specifications,
             'status': context.status,
-            'error_message': context.error_message,
-            'template_id': context.template_id
+            'error_message': context.error_message
         },
         'files': [{
             'path': file.file_path,
             'content': file.content
         } for file in files]
     })
-
-# Initialize templates when the application starts
-with app.app_context():
-    init_templates()

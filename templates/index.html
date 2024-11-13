@@ -20,10 +20,9 @@
                         <select class="form-select" id="templateSelector">
                             <option value="">Select Template (Optional)</option>
                             {% for template in templates %}
-                                <option value="{{ template.id }}" 
-                                        data-description="{{ template.description }}">
-                                    {{ template.name }}
-                                </option>
+                            <option value="{{ template.id }}" data-description="{{ template.description }}">
+                                {{ template.name }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>

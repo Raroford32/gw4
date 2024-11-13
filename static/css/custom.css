@@ -1,0 +1,21 @@
+.CodeMirror {
+    height: 500px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+}
+
+#codePreview {
+    margin-top: 1rem;
+}
+
+.file-item {
+    cursor: pointer;
+}
+
+.file-item:hover {
+    background-color: var(--bs-secondary-bg);
+}
+
+.generation-status {
+    margin-bottom: 1rem;
+}

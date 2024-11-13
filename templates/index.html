@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Project Requirements</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="projectTitle" class="form-label">Project Title</label>
+                    <input type="text" class="form-control" id="projectTitle" placeholder="Enter project title">
+                </div>
+                <div class="mb-3">
+                    <label for="requirements" class="form-label">Requirements</label>
+                    <textarea class="form-control" id="requirements" rows="6" placeholder="Enter project requirements"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="specifications" class="form-label">Specifications</label>
+                    <textarea class="form-control" id="specifications" rows="6" placeholder="Enter technical specifications"></textarea>
+                </div>
+                <button class="btn btn-primary" id="generateBtn" onclick="generateCode()">Generate Code</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Generated Code</h5>
+            </div>
+            <div class="card-body">
+                <div id="generationProgress" class="alert alert-info d-none">
+                    Generating code... <div class="spinner-border spinner-border-sm"></div>
+                </div>
+                <div id="generationError" class="alert alert-danger d-none"></div>
+                <div id="fileList" class="list-group mb-3"></div>
+                <div id="codePreview">
+                    <textarea id="codeEditor"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
